@@ -27,6 +27,24 @@ Extracting is required every time the splat yaml (`smashbrothers.us.yaml` of `sm
 
 or with parallel jobs for faster build: `make -j$(nproc)`
 
+## Build With Docker
+
+This repository includes a Docker-based build path so you can build without installing host dependencies.
+
+1. Build the image:
+`make docker-image`
+2. Put the base ROM at `<repo root>/baserom.us.z64` (or `baserom.jp.z64` for JP).
+3. Run initial extract + build:
+`make docker-init`
+4. Run regular ROM builds:
+`make docker-rom`
+
+Use JP with `VERSION=jp`, for example:
+`make VERSION=jp docker-init`
+`make VERSION=jp docker-rom`
+
+The built ROM is written to `build/smashbrothers.<version>.z64` in your local repo directory.
+
 ### MacOS specific
 
 - MIPS binutils can be obtained from [macports](https://ports.macports.org/port/mips-elf-binutils/)

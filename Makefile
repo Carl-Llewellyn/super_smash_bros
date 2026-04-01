@@ -17,6 +17,9 @@ VERBOSE ?= 0
 PRINT ?= printf
 
 VERSION ?= us
+DOCKER_IMAGE ?= ssb-decomp-re-builder
+DOCKER_UID ?= $(shell id -u)
+DOCKER_GID ?= $(shell id -g)
 
 BASEROM := baserom.$(VERSION).z64
 TARGET  := smashbrothers
@@ -349,6 +352,25 @@ init:
 	${MAKE} extract
 	${MAKE} all
 
+docker-image:
+	docker build -f docker/Dockerfile -t $(DOCKER_IMAGE) docker
+
+docker-init: docker-image
+	docker run --rm -t \
+		--user "$(DOCKER_UID):$(DOCKER_GID)" \
+		-v "$(CURDIR)":/work \
+		-w /work \
+		$(DOCKER_IMAGE) \
+		bash -lc "git config --global --add safe.directory '*' && HOME=/tmp ./installDependencies.sh && make VERSION=$(VERSION) init"
+
+docker-rom: docker-image
+	docker run --rm -t \
+		--user "$(DOCKER_UID):$(DOCKER_GID)" \
+		-v "$(CURDIR)":/work \
+		-w /work \
+		$(DOCKER_IMAGE) \
+		bash -lc "git config --global --add safe.directory '*' && HOME=/tmp ./installDependencies.sh && make VERSION=$(VERSION) -j$$(nproc)"
+
 # asm-differ expected object files
 expected:
 	mkdir -p expected/build
@@ -461,4 +483,4 @@ endif
 
 -include $(DEP_FILES)
 
-.PHONY: all toolchain rom nolink clean extract init expected validate format
+.PHONY: all toolchain rom nolink clean extract init docker-image docker-init docker-rom expected validate format
